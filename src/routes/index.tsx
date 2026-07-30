@@ -59,6 +59,9 @@ function Index() {
             Entrar
           </Link>
         </div>
+        <p className="mt-10 text-xs text-muted-foreground">
+          sync check · 2026-07-30
+        </p>
       </div>
     </main>
   );
