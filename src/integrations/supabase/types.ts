@@ -14,7 +14,172 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      charges: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string
+          due_date: string
+          id: string
+          installment: number
+          message: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_id: string
+          due_date: string
+          id?: string
+          installment: number
+          message: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          due_date?: string
+          id?: string
+          installment?: number
+          message?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charges_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          created_at: string
+          document: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          active: boolean
+          amount: number
+          company_id: string
+          created_at: string
+          custom_message: string
+          id: string
+          months: number
+          name: string
+          start_date: string
+          updated_at: string
+          user_id: string
+          whatsapp: string
+        }
+        Insert: {
+          active?: boolean
+          amount?: number
+          company_id: string
+          created_at?: string
+          custom_message?: string
+          id?: string
+          months?: number
+          name: string
+          start_date?: string
+          updated_at?: string
+          user_id: string
+          whatsapp: string
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          company_id?: string
+          created_at?: string
+          custom_message?: string
+          id?: string
+          months?: number
+          name?: string
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_settings: {
+        Row: {
+          api_token: string | null
+          api_url: string | null
+          created_at: string
+          id: string
+          instance: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_token?: string | null
+          api_url?: string | null
+          created_at?: string
+          id?: string
+          instance?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_token?: string | null
+          api_url?: string | null
+          created_at?: string
+          id?: string
+          instance?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
