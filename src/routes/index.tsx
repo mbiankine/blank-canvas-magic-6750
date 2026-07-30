@@ -1,18 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Bem-vindo — Comece a construir" },
+      { title: "ZapCobrança — Cobranças recorrentes no WhatsApp" },
       {
         name: "description",
-        content: "Um ponto de partida limpo para o seu próximo projeto. Diga o que quer construir.",
+        content:
+          "Cadastre sua empresa, seus clientes e dispare cobranças mensais personalizadas pelo WhatsApp com Baileys.",
       },
-      { property: "og:title", content: "Bem-vindo — Comece a construir" },
+      { property: "og:title", content: "ZapCobrança — Cobranças recorrentes no WhatsApp" },
       {
         property: "og:description",
-        content: "Um ponto de partida limpo para o seu próximo projeto.",
+        content:
+          "Gere parcelas automáticas e envie mensagens personalizadas de cobrança pelo WhatsApp.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,
@@ -32,24 +36,28 @@ function Index() {
       <div className="mx-auto max-w-2xl text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
           <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          Pronto para construir
+          Cobranças automáticas no WhatsApp
         </span>
         <h1 className="mt-6 text-balance text-5xl font-semibold tracking-tight text-foreground sm:text-6xl">
-          Sua próxima ideia começa aqui.
+          Cobre seus clientes todo mês, sem esquecer nenhum.
         </h1>
         <p className="mt-5 text-pretty text-lg text-muted-foreground">
-          Descreva o que você quer criar no chat — uma landing page, um app, um portfólio — e eu construo para você.
+          Cadastre a empresa, o WhatsApp do cliente, o valor e a quantidade de meses. As parcelas e
+          as mensagens personalizadas são geradas automaticamente.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <a
-            href="https://docs.lovable.dev"
+          <Link
+            to="/app"
             className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Ver documentação
-          </a>
-          <span className="text-sm text-muted-foreground">
-            ou digite seu pedido no chat →
-          </span>
+            Abrir painel
+          </Link>
+          <Link
+            to="/auth"
+            className="inline-flex items-center justify-center rounded-md border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            Entrar / criar conta
+          </Link>
         </div>
       </div>
     </main>
