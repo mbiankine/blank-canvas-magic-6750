@@ -56,7 +56,7 @@ function Index() {
             to="/auth"
             className="inline-flex items-center justify-center rounded-md border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Entrar / criar conta
+            Entrar
           </Link>
         </div>
       </div>
