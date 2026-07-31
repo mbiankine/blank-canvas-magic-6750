@@ -50,7 +50,15 @@ export const sendCharge = createServerFn({ method: "POST" })
 
     if (!response.ok) {
       const body = await response.text();
-      throw new Error(`Falha no envio [${response.status}]: ${body.slice(0, 300)}`);
+      if (response.status === 404) {
+        throw new Error(
+          `Rota nao encontrada no Worker (404) em ${settings.api_url}. ` +
+            `Confirme que a URL termina em /send, ex.: https://seu-worker.up.railway.app/send`,
+        );
+      }
+      throw new Error(
+        `Falha no envio [${response.status}] em ${settings.api_url}: ${body.slice(0, 300)}`,
+      );
     }
 
     const { error: updateError } = await supabase
