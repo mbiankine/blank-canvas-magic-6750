@@ -8,11 +8,27 @@ import { z } from "zod";
  *   Authorization: Bearer <WORKER_TOKEN>
  *   { "chargeId": "uuid", "status": "sent" | "delivered" | "failed" | "paid", "detail": "opcional" }
  */
-const payloadSchema = z.object({
+const statusSchema = z.object({
   chargeId: z.string().uuid(),
   status: z.enum(["sent", "delivered", "failed", "paid"]),
   detail: z.string().max(1000).optional(),
 });
+
+/**
+ * Mensagem recebida no WhatsApp encaminhada pelo Worker:
+ *   { "from": "5511999999999", "message": "*recebido" }
+ * Comandos reconhecidos: recebido / pago / paguei (com ou sem *).
+ */
+const inboundSchema = z.object({
+  from: z.string().min(8).max(30).optional(),
+  phone: z.string().min(8).max(30).optional(),
+  number: z.string().min(8).max(30).optional(),
+  message: z.string().max(2000).optional(),
+  text: z.string().max(2000).optional(),
+  body: z.string().max(2000).optional(),
+});
+
+const PAID_COMMAND = /^[\s*_~]*(recebido|pago|paguei|quitado)[\s*_~!.]*$/i;
 
 const jsonHeaders = {
   "Content-Type": "application/json",
@@ -48,9 +64,9 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
         }
 
 
-        let parsed: z.infer<typeof payloadSchema>;
+        let raw: unknown;
         try {
-          parsed = payloadSchema.parse(await request.json());
+          raw = await request.json();
         } catch {
           return new Response(JSON.stringify({ error: "Payload inválido" }), {
             status: 400,
@@ -59,6 +75,86 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+        // Caminho 1: mensagem recebida do cliente (comando *recebido).
+        const inbound = inboundSchema.safeParse(raw);
+        const inboundText =
+          inbound.success
+            ? (inbound.data.message ?? inbound.data.text ?? inbound.data.body ?? "")
+            : "";
+        const inboundPhoneRaw = inbound.success
+          ? (inbound.data.from ?? inbound.data.phone ?? inbound.data.number ?? "")
+          : "";
+
+        if (inboundText && inboundPhoneRaw) {
+          if (!PAID_COMMAND.test(inboundText.trim())) {
+            return new Response(JSON.stringify({ ok: true, ignored: true }), {
+              status: 200,
+              headers: jsonHeaders,
+            });
+          }
+
+          const digits = inboundPhoneRaw.split("@")[0].replace(/\D/g, "");
+          const suffix = digits.slice(-8);
+
+          const { data: customers } = await supabaseAdmin
+            .from("customers")
+            .select("id, whatsapp")
+            .like("whatsapp", `%${suffix}`);
+
+          const customerIds = (customers ?? []).map((customer) => customer.id);
+          if (!customerIds.length) {
+            return new Response(JSON.stringify({ ok: true, matched: false }), {
+              status: 200,
+              headers: jsonHeaders,
+            });
+          }
+
+          const { data: charge } = await supabaseAdmin
+            .from("charges")
+            .select("id")
+            .in("customer_id", customerIds)
+            .neq("status", "paid")
+            .order("due_date", { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (!charge) {
+            return new Response(JSON.stringify({ ok: true, matched: false }), {
+              status: 200,
+              headers: jsonHeaders,
+            });
+          }
+
+          const { error: paidError } = await supabaseAdmin
+            .from("charges")
+            .update({ status: "paid" })
+            .eq("id", charge.id);
+
+          if (paidError) {
+            return new Response(JSON.stringify({ error: paidError.message }), {
+              status: 500,
+              headers: jsonHeaders,
+            });
+          }
+
+          return new Response(JSON.stringify({ ok: true, chargeId: charge.id, status: "paid" }), {
+            status: 200,
+            headers: jsonHeaders,
+          });
+        }
+
+        // Caminho 2: atualização de status de uma cobrança específica.
+        let parsed: z.infer<typeof statusSchema>;
+        try {
+          parsed = statusSchema.parse(raw);
+        } catch {
+          return new Response(JSON.stringify({ error: "Payload inválido" }), {
+            status: 400,
+            headers: jsonHeaders,
+          });
+        }
+
         const { error } = await supabaseAdmin
           .from("charges")
           .update({
