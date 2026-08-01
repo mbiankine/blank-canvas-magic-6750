@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -7,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getWorkerStatus } from "@/lib/whatsapp-status.functions";
 
 export function SettingsTab() {
   const queryClient = useQueryClient();
@@ -63,8 +67,93 @@ export function SettingsTab() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const fetchWorkerStatus = useServerFn(getWorkerStatus);
+  const worker = useQuery({
+    queryKey: ["worker_status"],
+    queryFn: () => fetchWorkerStatus(),
+    refetchInterval: 15000,
+  });
+
+  const workerData = worker.data;
+
   return (
-    <Card className="max-w-2xl">
+    <div className="grid max-w-5xl gap-6 lg:grid-cols-2">
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+        <CardTitle>Pareamento do WhatsApp</CardTitle>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant={
+              workerData?.connected === true
+                ? "default"
+                : workerData?.connected === false
+                  ? "destructive"
+                  : "secondary"
+            }
+          >
+            {workerData?.connected === true
+              ? "Conectado"
+              : workerData
+                ? (workerData.status ?? "desconhecido")
+                : "—"}
+          </Badge>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => worker.refetch()}
+            disabled={worker.isFetching}
+          >
+            Atualizar
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {worker.isLoading ? (
+          <Skeleton className="h-56 w-full" />
+        ) : !workerData?.configured ? (
+          <p className="text-sm text-muted-foreground">
+            Salve o endpoint do seu serviço para exibir o status e o QR code.
+          </p>
+        ) : (
+          <>
+            <p className="text-xs text-muted-foreground break-all">
+              Worker: {workerData.baseUrl}
+            </p>
+            {workerData.error && (
+              <p className="text-sm text-destructive">{workerData.error}</p>
+            )}
+            {workerData.connected === true ? (
+              <p className="text-sm text-muted-foreground">
+                WhatsApp pareado — as cobranças podem ser enviadas.
+              </p>
+            ) : workerData.qrImage ? (
+              <div className="space-y-2">
+                <img
+                  src={workerData.qrImage}
+                  alt="QR code para parear o WhatsApp"
+                  className="mx-auto h-64 w-64 rounded-lg border border-border bg-card p-2"
+                />
+                <p className="text-center text-xs text-muted-foreground">
+                  WhatsApp → Aparelhos conectados → Conectar aparelho.
+                </p>
+              </div>
+            ) : workerData.qrText ? (
+              <pre className="overflow-auto rounded-lg border border-border bg-muted p-3 text-[8px] leading-[8px]">
+                {workerData.qrText}
+              </pre>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nenhum QR disponível no momento (rota /qr do worker). Reinicie o serviço se o
+                pareamento estiver pendente.
+              </p>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+
+    <Card>
       <CardHeader>
         <CardTitle>Conexão WhatsApp (Baileys / Railway)</CardTitle>
       </CardHeader>
@@ -124,5 +213,6 @@ export function SettingsTab() {
         </form>
       </CardContent>
     </Card>
+    </div>
   );
 }

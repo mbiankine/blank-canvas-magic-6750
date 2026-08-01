@@ -37,7 +37,10 @@ export function CustomersTab() {
   const { data: companies } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("companies").select("id, name").order("name");
+      const { data, error } = await supabase
+        .from("companies")
+        .select("id, name, phone")
+        .order("name");
       if (error) throw new Error(error.message);
       return data;
     },
@@ -115,7 +118,15 @@ export function CustomersTab() {
               <Label>Empresa *</Label>
               <Select
                 value={form.company_id}
-                onValueChange={(value) => setForm({ ...form, company_id: value })}
+                onValueChange={(value) => {
+                  const company = companies?.find((item) => item.id === value);
+                  const companyPhone = (company?.phone ?? "").replace(/\D/g, "");
+                  setForm((prev) => ({
+                    ...prev,
+                    company_id: value,
+                    whatsapp: companyPhone || prev.whatsapp,
+                  }));
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a empresa" />
@@ -154,6 +165,9 @@ export function CustomersTab() {
                   value={form.whatsapp}
                   onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Preenchido com o telefone da empresa; edite se o destinatário for outro.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customer-amount">Valor (R$) *</Label>
