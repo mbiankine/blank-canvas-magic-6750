@@ -10,7 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function SettingsTab() {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({ api_url: "", api_token: "", instance: "" });
+  const [form, setForm] = useState({
+    api_url: "",
+    api_token: "",
+    instance: "",
+    send_time: "09:00",
+  });
 
   const { data: settings } = useQuery({
     queryKey: ["whatsapp_settings"],
