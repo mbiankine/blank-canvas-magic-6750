@@ -79,7 +79,20 @@ export const Route = createFileRoute("/api/public/hooks/send-due-charges")({
 
           for (const charge of charges ?? []) {
             const phone = normalizeBrPhone(charge.customers?.whatsapp ?? "");
-            if (!phone) continue;
+            const logEvent = (event_type: "sent" | "failed", detail: string) =>
+              supabaseAdmin.from("charge_events").insert({
+                user_id: settings.user_id,
+                charge_id: charge.id,
+                event_type,
+                detail,
+                phone,
+                message: charge.message,
+              });
+
+            if (!phone) {
+              await logEvent("failed", "Cliente sem número de WhatsApp válido.");
+              continue;
+            }
             try {
               const response = await fetch(sendUrl, {
                 method: "POST",
@@ -100,16 +113,20 @@ export const Route = createFileRoute("/api/public/hooks/send-due-charges")({
                 }),
               });
               if (!response.ok) {
+                const body = (await response.text()).trim().slice(0, 300);
                 failures.push(`${charge.id}: ${response.status}`);
+                await logEvent("failed", `Envio automático falhou [${response.status}]: ${body}`);
                 continue;
               }
               await supabaseAdmin
                 .from("charges")
                 .update({ status: "sent", sent_at: new Date().toISOString() })
                 .eq("id", charge.id);
+              await logEvent("sent", `Enviada automaticamente para ${phone}.`);
               sent += 1;
             } catch (error) {
               failures.push(`${charge.id}: ${(error as Error).message}`);
+              await logEvent("failed", `Envio automático falhou: ${(error as Error).message}`);
             }
           }
         }
