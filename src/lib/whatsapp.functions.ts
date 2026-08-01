@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { normalizeBrPhone } from "@/lib/phone";
 
 const sendSchema = z.object({ chargeId: z.string().uuid() });
 
@@ -38,7 +39,7 @@ export const sendCharge = createServerFn({ method: "POST" })
       return base.endsWith("/send") ? base : `${base}/send`;
     })();
 
-    const phone = (charge.customers?.whatsapp ?? "").replace(/\D/g, "");
+    const phone = normalizeBrPhone(charge.customers?.whatsapp ?? "");
     if (!phone) throw new Error("Cliente sem número de WhatsApp válido.");
 
     const response = await fetch(sendUrl, {
