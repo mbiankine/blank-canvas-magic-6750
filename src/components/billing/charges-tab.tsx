@@ -49,7 +49,10 @@ export function ChargesTab() {
       toast.success("Cobrança enviada pelo WhatsApp.");
       invalidate();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => {
+      toast.error(error.message);
+      invalidate();
+    },
   });
 
   const statusMutation = useMutation({
