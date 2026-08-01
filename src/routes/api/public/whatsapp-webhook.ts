@@ -17,7 +17,7 @@ const payloadSchema = z.object({
 const jsonHeaders = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Headers": "authorization, content-type, x-worker-token",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 } as const;
 
