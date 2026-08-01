@@ -1,0 +1,2 @@
+ALTER TABLE public.whatsapp_settings
+ADD COLUMN IF NOT EXISTS send_time TIME NOT NULL DEFAULT '09:00';

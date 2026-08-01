@@ -10,7 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function SettingsTab() {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({ api_url: "", api_token: "", instance: "" });
+  const [form, setForm] = useState({
+    api_url: "",
+    api_token: "",
+    instance: "",
+    send_time: "09:00",
+  });
 
   const { data: settings } = useQuery({
     queryKey: ["whatsapp_settings"],
@@ -30,6 +35,7 @@ export function SettingsTab() {
         api_url: settings.api_url ?? "",
         api_token: settings.api_token ?? "",
         instance: settings.instance ?? "",
+        send_time: (settings.send_time ?? "09:00").slice(0, 5),
       });
     }
   }, [settings]);
@@ -44,6 +50,7 @@ export function SettingsTab() {
           api_url: form.api_url.trim(),
           api_token: form.api_token.trim() || null,
           instance: form.instance.trim() || null,
+          send_time: form.send_time || "09:00",
         },
         { onConflict: "user_id" },
       );
@@ -98,6 +105,18 @@ export function SettingsTab() {
               value={form.instance}
               onChange={(e) => setForm({ ...form, instance: e.target.value })}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="send-time">Horário de cobrança</Label>
+            <Input
+              id="send-time"
+              type="time"
+              value={form.send_time}
+              onChange={(e) => setForm({ ...form, send_time: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground">
+              Hora do dia usada para os envios das cobranças.
+            </p>
           </div>
           <Button type="submit" disabled={save.isPending}>
             Salvar configurações
