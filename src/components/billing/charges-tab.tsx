@@ -23,6 +23,8 @@ const STATUS_LABEL: Record<string, string> = {
 export function ChargesTab() {
   const queryClient = useQueryClient();
   const send = useServerFn(sendCharge);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
 
   const { data: charges, isLoading } = useQuery({
     queryKey: ["charges"],
