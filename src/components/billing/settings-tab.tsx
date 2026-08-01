@@ -106,6 +106,18 @@ export function SettingsTab() {
               onChange={(e) => setForm({ ...form, instance: e.target.value })}
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="send-time">Horário de cobrança</Label>
+            <Input
+              id="send-time"
+              type="time"
+              value={form.send_time}
+              onChange={(e) => setForm({ ...form, send_time: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground">
+              Hora do dia usada para os envios das cobranças.
+            </p>
+          </div>
           <Button type="submit" disabled={save.isPending}>
             Salvar configurações
           </Button>
