@@ -50,6 +50,7 @@ export function SettingsTab() {
           api_url: form.api_url.trim(),
           api_token: form.api_token.trim() || null,
           instance: form.instance.trim() || null,
+          send_time: form.send_time || "09:00",
         },
         { onConflict: "user_id" },
       );
