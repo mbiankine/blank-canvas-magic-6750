@@ -31,10 +31,17 @@ export const sendCharge = createServerFn({ method: "POST" })
       throw new Error("Configure a URL do seu serviço Baileys em Configurações.");
     }
 
+    // O Worker expõe exatamente POST /send. Normaliza qualquer variação salva
+    // (origem pura, barra final, espaços) para evitar 404 de rota inexistente.
+    const sendUrl = (() => {
+      const base = settings.api_url.trim().replace(/\/+$/, "");
+      return base.endsWith("/send") ? base : `${base}/send`;
+    })();
+
     const phone = (charge.customers?.whatsapp ?? "").replace(/\D/g, "");
     if (!phone) throw new Error("Cliente sem número de WhatsApp válido.");
 
-    const response = await fetch(settings.api_url, {
+    const response = await fetch(sendUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -49,17 +56,22 @@ export const sendCharge = createServerFn({ method: "POST" })
     });
 
     if (!response.ok) {
-      const body = await response.text();
+      const body = (await response.text()).trim();
       if (response.status === 404) {
+        if (body.includes("numero_nao_esta_no_whatsapp")) {
+          throw new Error(`O número ${phone} não está registrado no WhatsApp.`);
+        }
         throw new Error(
-          `Rota nao encontrada no Worker (404) em ${settings.api_url}. ` +
-            `Confirme que a URL termina em /send, ex.: https://seu-worker.up.railway.app/send`,
+          `Rota não encontrada no Worker (404) em ${sendUrl}. ` +
+            `Confirme o domínio do Railway e que o serviço está online (teste GET /status).`,
         );
       }
-      throw new Error(
-        `Falha no envio [${response.status}] em ${settings.api_url}: ${body.slice(0, 300)}`,
-      );
+      if (response.status === 503) {
+        throw new Error("Worker online, mas o WhatsApp não está conectado. Escaneie o QR em /qr.");
+      }
+      throw new Error(`Falha no envio [${response.status}] em ${sendUrl}: ${body.slice(0, 300)}`);
     }
+
 
     const { error: updateError } = await supabase
       .from("charges")
