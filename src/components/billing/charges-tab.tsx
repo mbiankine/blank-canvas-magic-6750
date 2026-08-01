@@ -138,7 +138,18 @@ export function ChargesTab() {
                 >
                   Marcar paga
                 </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => {
+                    if (confirm("Remover esta cobrança?")) deleteMutation.mutate(charge.id);
+                  }}
+                >
+                  Remover
+                </Button>
               </div>
+
             </div>
           ))
         )}
