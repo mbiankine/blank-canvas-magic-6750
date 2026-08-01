@@ -21,29 +21,38 @@ async function fetchCompanies() {
 export function CompaniesTab() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ name: "", document: "", phone: "", email: "" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const resetForm = () => {
+    setForm({ name: "", document: "", phone: "", email: "" });
+    setEditingId(null);
+  };
 
   const { data: companies, isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: fetchCompanies,
   });
 
-  const createCompany = useMutation({
+  const saveCompany = useMutation({
     mutationFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Sessão expirada.");
-      const { error } = await supabase.from("companies").insert({
-        user_id: userData.user.id,
+      const payload = {
         name: form.name.trim(),
         document: form.document.trim() || null,
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,
-      });
+      };
+      const { error } = editingId
+        ? await supabase.from("companies").update(payload).eq("id", editingId)
+        : await supabase.from("companies").insert({ user_id: userData.user.id, ...payload });
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
-      toast.success("Empresa cadastrada.");
-      setForm({ name: "", document: "", phone: "", email: "" });
+      toast.success(editingId ? "Empresa atualizada." : "Empresa cadastrada.");
+      resetForm();
       queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -55,6 +64,7 @@ export function CompaniesTab() {
     },
     onSuccess: () => {
       toast.success("Empresa removida.");
+      resetForm();
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["charges"] });
@@ -66,14 +76,14 @@ export function CompaniesTab() {
     <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Nova empresa</CardTitle>
+          <CardTitle>{editingId ? "Editar empresa" : "Nova empresa"}</CardTitle>
         </CardHeader>
         <CardContent>
           <form
             className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
-              createCompany.mutate();
+              saveCompany.mutate();
             }}
           >
             <div className="space-y-2">
@@ -114,9 +124,16 @@ export function CompaniesTab() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={createCompany.isPending}>
-              Cadastrar empresa
-            </Button>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1" disabled={saveCompany.isPending}>
+                {editingId ? "Salvar alterações" : "Cadastrar empresa"}
+              </Button>
+              {editingId && (
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Cancelar
+                </Button>
+              )}
+            </div>
           </form>
         </CardContent>
       </Card>
@@ -143,6 +160,22 @@ export function CompaniesTab() {
                       "Sem dados adicionais"}
                   </p>
                 </div>
+                <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setEditingId(company.id);
+                    setForm({
+                      name: company.name ?? "",
+                      document: company.document ?? "",
+                      phone: company.phone ?? "",
+                      email: company.email ?? "",
+                    });
+                  }}
+                >
+                  Editar
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -151,6 +184,7 @@ export function CompaniesTab() {
                 >
                   Remover
                 </Button>
+                </div>
               </div>
             ))
           )}
