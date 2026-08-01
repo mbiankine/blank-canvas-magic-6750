@@ -42,43 +42,69 @@ export const sendCharge = createServerFn({ method: "POST" })
     const phone = normalizeBrPhone(charge.customers?.whatsapp ?? "");
     if (!phone) throw new Error("Cliente sem número de WhatsApp válido.");
 
-    const response = await fetch(sendUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(settings.api_token ? { Authorization: `Bearer ${settings.api_token}` } : {}),
-      },
-      body: JSON.stringify({
-        instance: settings.instance ?? undefined,
+    const logEvent = async (
+      event_type: "sent" | "failed",
+      detail: string | null,
+    ) => {
+      await supabase.from("charge_events").insert({
+        user_id: userId,
+        charge_id: charge.id,
+        event_type,
+        detail,
         phone,
-        number: phone,
         message: charge.message,
-      }),
-    });
+      });
+    };
+
+    const fail = async (message: string) => {
+      await logEvent("failed", message);
+      throw new Error(message);
+    };
+
+    let response: Response;
+    try {
+      response = await fetch(sendUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(settings.api_token ? { Authorization: `Bearer ${settings.api_token}` } : {}),
+        },
+        body: JSON.stringify({
+          instance: settings.instance ?? undefined,
+          phone,
+          number: phone,
+          message: charge.message,
+        }),
+      });
+    } catch (error) {
+      await fail(`Não foi possível alcançar o Worker em ${sendUrl}: ${(error as Error).message}`);
+      throw error;
+    }
 
     if (!response.ok) {
       const body = (await response.text()).trim();
       if (response.status === 404) {
         if (body.includes("numero_nao_esta_no_whatsapp")) {
-          throw new Error(`O número ${phone} não está registrado no WhatsApp.`);
+          await fail(`O número ${phone} não está registrado no WhatsApp.`);
         }
-        throw new Error(
+        await fail(
           `Rota não encontrada no Worker (404) em ${sendUrl}. ` +
             `Confirme o domínio do Railway e que o serviço está online (teste GET /status).`,
         );
       }
       if (response.status === 503) {
-        throw new Error("Worker online, mas o WhatsApp não está conectado. Escaneie o QR em /qr.");
+        await fail("Worker online, mas o WhatsApp não está conectado. Escaneie o QR em /qr.");
       }
-      throw new Error(`Falha no envio [${response.status}] em ${sendUrl}: ${body.slice(0, 300)}`);
+      await fail(`Falha no envio [${response.status}] em ${sendUrl}: ${body.slice(0, 300)}`);
     }
-
 
     const { error: updateError } = await supabase
       .from("charges")
       .update({ status: "sent", sent_at: new Date().toISOString() })
       .eq("id", charge.id);
     if (updateError) throw new Error(updateError.message);
+
+    await logEvent("sent", `Enviada manualmente para ${phone}.`);
 
     return { ok: true as const };
   });

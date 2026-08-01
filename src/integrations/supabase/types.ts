@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      charge_events: {
+        Row: {
+          charge_id: string
+          created_at: string
+          detail: string | null
+          event_type: string
+          id: string
+          message: string | null
+          phone: string | null
+          user_id: string
+        }
+        Insert: {
+          charge_id: string
+          created_at?: string
+          detail?: string | null
+          event_type: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          user_id: string
+        }
+        Update: {
+          charge_id?: string
+          created_at?: string
+          detail?: string | null
+          event_type?: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charge_events_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "charges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       charges: {
         Row: {
           amount: number
