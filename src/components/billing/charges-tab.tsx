@@ -102,56 +102,92 @@ export function ChargesTab() {
             Cadastre um cliente para gerar as cobranças mensais automaticamente.
           </p>
         ) : (
-          charges.map((charge) => (
-            <div
-              key={charge.id}
-              className="flex flex-col gap-3 rounded-lg border border-border p-4 md:flex-row md:items-center md:justify-between"
-            >
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium text-foreground">{charge.customers?.name}</p>
-                  <Badge variant={charge.status === "pending" ? "secondary" : "default"}>
-                    {STATUS_LABEL[charge.status] ?? charge.status}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    Parcela {charge.installment}
-                  </span>
+          charges.map((charge) => {
+            const expanded = expandedId === charge.id;
+            return (
+              <div key={charge.id} className="rounded-lg border border-border p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-start gap-2">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={expanded ? "Recolher histórico" : "Expandir histórico"}
+                      aria-expanded={expanded}
+                      onClick={() => setExpandedId(expanded ? null : charge.id)}
+                    >
+                      <ChevronRight
+                        className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")}
+                      />
+                    </Button>
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium text-foreground">{charge.customers?.name}</p>
+                        <Badge variant={charge.status === "pending" ? "secondary" : "default"}>
+                          {STATUS_LABEL[charge.status] ?? charge.status}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          Parcela {charge.installment}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Vence em{" "}
+                        {new Date(`${charge.due_date}T00:00:00`).toLocaleDateString("pt-BR")} · R${" "}
+                        {Number(charge.amount).toFixed(2)} · {charge.customers?.whatsapp}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {charge.sent_at
+                          ? `Enviada em ${new Date(charge.sent_at).toLocaleString("pt-BR")}`
+                          : "Ainda não enviada"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => sendMutation.mutate(charge.id)}
+                      disabled={sendMutation.isPending}
+                    >
+                      Enviar agora
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => statusMutation.mutate({ id: charge.id, status: "paid" })}
+                    >
+                      Marcar paga
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => {
+                        if (confirm("Remover esta cobrança?")) deleteMutation.mutate(charge.id);
+                      }}
+                    >
+                      Remover
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Vence em {new Date(`${charge.due_date}T00:00:00`).toLocaleDateString("pt-BR")} · R${" "}
-                  {Number(charge.amount).toFixed(2)} · {charge.customers?.whatsapp}
-                </p>
-                <p className="text-xs text-muted-foreground">{charge.message}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => sendMutation.mutate(charge.id)}
-                  disabled={sendMutation.isPending}
-                >
-                  Enviar agora
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => statusMutation.mutate({ id: charge.id, status: "paid" })}
-                >
-                  Marcar paga
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  disabled={deleteMutation.isPending}
-                  onClick={() => {
-                    if (confirm("Remover esta cobrança?")) deleteMutation.mutate(charge.id);
-                  }}
-                >
-                  Remover
-                </Button>
-              </div>
 
-            </div>
-          ))
+                {expanded && (
+                  <div className="mt-4 space-y-3 border-t border-border pt-4">
+                    <div>
+                      <p className="text-xs font-medium text-foreground">Mensagem programada</p>
+                      <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">
+                        {charge.message}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-foreground">Histórico de envios</p>
+                      <div className="mt-2">
+                        <ChargeHistory chargeId={charge.id} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </CardContent>
     </Card>
