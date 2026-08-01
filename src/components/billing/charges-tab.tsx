@@ -52,11 +52,48 @@ export function ChargesTab() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("charges").delete().eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Cobrança removida.");
+      invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("charges").delete().not("id", "is", null);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Todas as cobranças foram removidas.");
+      invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle>Cobranças programadas</CardTitle>
+        {!!charges?.length && (
+          <Button
+            size="sm"
+            variant="destructive"
+            disabled={deleteAllMutation.isPending}
+            onClick={() => {
+              if (confirm("Remover todas as cobranças?")) deleteAllMutation.mutate();
+            }}
+          >
+            Remover todas
+          </Button>
+        )}
       </CardHeader>
+
       <CardContent className="space-y-3">
         {isLoading ? (
           <Skeleton className="h-32 w-full" />
@@ -101,7 +138,18 @@ export function ChargesTab() {
                 >
                   Marcar paga
                 </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => {
+                    if (confirm("Remover esta cobrança?")) deleteMutation.mutate(charge.id);
+                  }}
+                >
+                  Remover
+                </Button>
               </div>
+
             </div>
           ))
         )}
