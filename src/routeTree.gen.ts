@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp-webhook'
+import { Route as ApiPublicHooksSendDueChargesRouteImport } from './routes/api/public/hooks/send-due-charges'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -40,18 +41,26 @@ const ApiPublicWhatsappWebhookRoute =
     path: '/api/public/whatsapp-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSendDueChargesRoute =
+  ApiPublicHooksSendDueChargesRouteImport.update({
+    id: '/api/public/hooks/send-due-charges',
+    path: '/api/public/hooks/send-due-charges',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AuthenticatedAppRoute
   '/api/public/whatsapp-webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/api/public/hooks/send-due-charges': typeof ApiPublicHooksSendDueChargesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AuthenticatedAppRoute
   '/api/public/whatsapp-webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/api/public/hooks/send-due-charges': typeof ApiPublicHooksSendDueChargesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -60,12 +69,23 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/api/public/whatsapp-webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/api/public/hooks/send-due-charges': typeof ApiPublicHooksSendDueChargesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/app' | '/api/public/whatsapp-webhook'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/app'
+    | '/api/public/whatsapp-webhook'
+    | '/api/public/hooks/send-due-charges'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/app' | '/api/public/whatsapp-webhook'
+  to:
+    | '/'
+    | '/auth'
+    | '/app'
+    | '/api/public/whatsapp-webhook'
+    | '/api/public/hooks/send-due-charges'
   id:
     | '__root__'
     | '/'
@@ -73,6 +93,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/app'
     | '/api/public/whatsapp-webhook'
+    | '/api/public/hooks/send-due-charges'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -80,6 +101,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
+  ApiPublicHooksSendDueChargesRoute: typeof ApiPublicHooksSendDueChargesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -119,6 +141,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/send-due-charges': {
+      id: '/api/public/hooks/send-due-charges'
+      path: '/api/public/hooks/send-due-charges'
+      fullPath: '/api/public/hooks/send-due-charges'
+      preLoaderRoute: typeof ApiPublicHooksSendDueChargesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -138,6 +167,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
+  ApiPublicHooksSendDueChargesRoute: ApiPublicHooksSendDueChargesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
