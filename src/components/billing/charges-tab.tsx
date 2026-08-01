@@ -38,7 +38,10 @@ export function ChargesTab() {
     },
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["charges"] });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["charges"] });
+    queryClient.invalidateQueries({ queryKey: ["charge-events"] });
+  };
 
   const sendMutation = useMutation({
     mutationFn: async (chargeId: string) => send({ data: { chargeId } }),
