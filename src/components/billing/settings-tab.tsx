@@ -35,6 +35,7 @@ export function SettingsTab() {
         api_url: settings.api_url ?? "",
         api_token: settings.api_token ?? "",
         instance: settings.instance ?? "",
+        send_time: (settings.send_time ?? "09:00").slice(0, 5),
       });
     }
   }, [settings]);
