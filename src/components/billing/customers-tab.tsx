@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeBrPhone } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,7 +71,7 @@ export function CustomersTab() {
         user_id: userData.user.id,
         company_id: form.company_id,
         name: form.name.trim(),
-        whatsapp: form.whatsapp.replace(/\D/g, ""),
+        whatsapp: normalizeBrPhone(form.whatsapp),
         amount,
         months: Number(form.months),
         start_date: form.start_date,
@@ -120,7 +121,7 @@ export function CustomersTab() {
                 value={form.company_id}
                 onValueChange={(value) => {
                   const company = companies?.find((item) => item.id === value);
-                  const companyPhone = (company?.phone ?? "").replace(/\D/g, "");
+                  const companyPhone = normalizeBrPhone(company?.phone ?? "");
                   setForm((prev) => ({
                     ...prev,
                     company_id: value,
@@ -166,7 +167,7 @@ export function CustomersTab() {
                   onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Preenchido com o telefone da empresa; edite se o destinatário for outro.
+                  Pode digitar só DDD + número; o 55 é adicionado automaticamente.
                 </p>
               </div>
               <div className="space-y-2">
