@@ -17,7 +17,7 @@ const payloadSchema = z.object({
 const jsonHeaders = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Headers": "authorization, content-type, x-worker-token",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 } as const;
 
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: jsonHeaders }),
       POST: async ({ request }) => {
-        const expected = process.env.WORKER_TOKEN;
+        const expected = process.env["WORKER_TOKEN"];
         if (!expected) {
           return new Response(JSON.stringify({ error: "WORKER_TOKEN não configurado" }), {
             status: 500,
@@ -34,14 +34,19 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
           });
         }
 
-        const provided = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
-        // Comparação de tamanho constante o suficiente para um token opaco.
+        // Aceita tanto `Authorization: Bearer <token>` quanto `x-worker-token: <token>`.
+        const provided = (
+          request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
+          request.headers.get("x-worker-token") ??
+          ""
+        ).trim();
         if (provided.length !== expected.length || provided !== expected) {
           return new Response(JSON.stringify({ error: "Não autorizado" }), {
             status: 401,
             headers: jsonHeaders,
           });
         }
+
 
         let parsed: z.infer<typeof payloadSchema>;
         try {
