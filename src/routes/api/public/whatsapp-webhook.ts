@@ -35,6 +35,10 @@ const PENDING_COMMANDS = [
   /^[\s*_~]*(pendente|aberto|fatura\s*pendente)[\s*_~!.]*$/i,
 ];
 
+// Regex para capturar comandos com ID, ex: "id 01 pago", "id 15 recebido", "*id 01 pago*"
+const ID_COMMAND_REGEX = /^[\s*_~]*id\s*(\d+)\s*(recebido|pago|paguei|quitado|fatura\s*paga|fatura\s*pago|pendente|aberto|fatura\s*pendente)[\s*_~!.]*$/i;
+
+
 const jsonHeaders = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
