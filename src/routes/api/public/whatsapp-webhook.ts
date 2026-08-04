@@ -113,7 +113,9 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
 
             // Busca a cobrança pelo short_id e pelo número de telefone (segurança)
             const digits = inboundPhoneRaw.split("@")[0].replace(/\D/g, "");
-            const suffix = digits.slice(-8);
+            
+            // Log para debug (você pode ver nos logs do sistema se necessário)
+            console.log(`Recebido comando de: ${digits}, shortId: ${shortId}, command: ${command}`);
 
             // Busca a cobrança pelo short_id
             const { data: charges } = await supabaseAdmin
@@ -125,25 +127,31 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               const charge = charges[0];
               const customersData = charge.customers as unknown as { whatsapp: string } | null;
               const customerWhatsapp = (customersData?.whatsapp || "").replace(/\D/g, "");
-              const isCustomer = customerWhatsapp.endsWith(suffix);
+              
+              // Verifica se o remetente é o cliente
+              const isCustomer = customerWhatsapp.endsWith(digits.slice(-8));
 
-              // Se não for o cliente, verifica se é a empresa (o admin/dono do sistema)
-              let isAdmin = false;
-              if (!isCustomer) {
+              // Verifica se o remetente é o número mestre (62982503769) ou algum da empresa
+              let isAdmin = digits.endsWith("62982503769") || digits.endsWith("5562982503769");
+              
+              if (!isAdmin && !isCustomer) {
                 const { data: companies } = await supabaseAdmin
                   .from("companies")
                   .select("phone")
-                  .eq("user_id", charge.user_id)
-                  .limit(1);
+                  .eq("user_id", charge.user_id);
 
-                if (companies && companies.length > 0) {
-                  const adminWhatsapp = (companies[0].phone || "").replace(/\D/g, "");
-                  isAdmin = adminWhatsapp.endsWith(suffix);
+                if (companies) {
+                  isAdmin = companies.some(c => {
+                    const companyPhone = (c.phone || "").replace(/\D/g, "");
+                    return companyPhone.endsWith(digits.slice(-8));
+                  });
                 }
               }
 
               if (isCustomer || isAdmin) {
                 targetChargeId = charge.id;
+              } else {
+                console.log(`Acesso negado para o número ${digits} na cobrança ${shortId}`);
               }
             }
           } else {
