@@ -19,16 +19,17 @@ import {
 } from "@/components/ui/select";
 
 const DEFAULT_MESSAGE =
-  "Olá {cliente}, sua cobrança de {valor} vence em {vencimento}. Qualquer dúvida, é só responder aqui.";
+  "Olá {cliente}, sua cobrança de {valor} referente ao serviço {servico} vence em {vencimento}. Qualquer dúvida, é só responder aqui.";
 
 const emptyForm = {
   company_id: "",
   name: "",
   whatsapp: "",
+  service_name: "",
   amount: "",
   months: "1",
   start_date: new Date().toISOString().slice(0, 10),
-  custom_message: DEFAULT_MESSAGE,
+  custom_message: "",
 };
 
 export function CustomersTab() {
@@ -42,6 +43,18 @@ export function CustomersTab() {
         .from("companies")
         .select("id, name, phone")
         .order("name");
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ["whatsapp_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("whatsapp_settings")
+        .select("default_message")
+        .maybeSingle();
       if (error) throw new Error(error.message);
       return data;
     },
@@ -72,10 +85,11 @@ export function CustomersTab() {
         company_id: form.company_id,
         name: form.name.trim(),
         whatsapp: normalizeBrPhone(form.whatsapp),
+        service_name: form.service_name.trim(),
         amount,
         months: Number(form.months),
         start_date: form.start_date,
-        custom_message: form.custom_message.trim() || DEFAULT_MESSAGE,
+        custom_message: form.custom_message.trim() || settings?.default_message || DEFAULT_MESSAGE,
       });
       if (error) throw new Error(error.message);
     },
@@ -171,6 +185,16 @@ export function CustomersTab() {
                 </p>
               </div>
               <div className="space-y-2">
+                <Label htmlFor="customer-service">Serviço *</Label>
+                <Input
+                  id="customer-service"
+                  required
+                  placeholder="Ex: Servidor de Bot, Designer..."
+                  value={form.service_name}
+                  onChange={(e) => setForm({ ...form, service_name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="customer-amount">Valor (R$) *</Label>
                 <Input
                   id="customer-amount"
@@ -211,11 +235,12 @@ export function CustomersTab() {
                 id="customer-message"
                 rows={4}
                 maxLength={1000}
+                placeholder={settings?.default_message || DEFAULT_MESSAGE}
                 value={form.custom_message}
                 onChange={(e) => setForm({ ...form, custom_message: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                Use {"{cliente}"}, {"{valor}"} e {"{vencimento}"}.
+                Use {"{cliente}"}, {"{valor}"}, {"{vencimento}"} e {"{servico}"}.
               </p>
             </div>
 
@@ -249,7 +274,7 @@ export function CustomersTab() {
                     </span>
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {customer.whatsapp} · R$ {Number(customer.amount).toFixed(2)} ·{" "}
+                    {customer.whatsapp} · {customer.service_name} · R$ {Number(customer.amount).toFixed(2)} ·{" "}
                     {customer.months}x
                   </p>
                   <p className="text-xs text-muted-foreground">{customer.custom_message}</p>

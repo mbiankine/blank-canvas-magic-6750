@@ -148,6 +148,7 @@ export type Database = {
           id: string
           months: number
           name: string
+          service_name: string | null
           start_date: string
           updated_at: string
           user_id: string
@@ -162,6 +163,7 @@ export type Database = {
           id?: string
           months?: number
           name: string
+          service_name?: string | null
           start_date?: string
           updated_at?: string
           user_id: string
@@ -176,6 +178,7 @@ export type Database = {
           id?: string
           months?: number
           name?: string
+          service_name?: string | null
           start_date?: string
           updated_at?: string
           user_id?: string
@@ -196,6 +199,7 @@ export type Database = {
           api_token: string | null
           api_url: string | null
           created_at: string
+          default_message: string | null
           id: string
           instance: string | null
           send_time: string
@@ -206,6 +210,7 @@ export type Database = {
           api_token?: string | null
           api_url?: string | null
           created_at?: string
+          default_message?: string | null
           id?: string
           instance?: string | null
           send_time?: string
@@ -216,6 +221,7 @@ export type Database = {
           api_token?: string | null
           api_url?: string | null
           created_at?: string
+          default_message?: string | null
           id?: string
           instance?: string | null
           send_time?: string
