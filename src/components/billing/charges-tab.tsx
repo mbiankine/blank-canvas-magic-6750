@@ -46,10 +46,15 @@ export function ChargesTab() {
   };
 
   const updateDateMutation = useMutation({
-    mutationFn: async ({ id, dueDate }: { id: string; dueDate: string }) => {
+    mutationFn: async ({ id, dueDate, resetStatus }: { id: string; dueDate: string; resetStatus: boolean }) => {
+      const updates: any = { due_date: dueDate };
+      if (resetStatus) {
+        updates.status = "pending";
+      }
+      
       const { error } = await supabase
         .from("charges")
-        .update({ due_date: dueDate })
+        .update(updates)
         .eq("id", id);
       if (error) throw new Error(error.message);
     },
@@ -226,7 +231,15 @@ export function ChargesTab() {
                                     <Button 
                                       size="sm" 
                                       className="h-8 px-2"
-                                      onClick={() => updateDateMutation.mutate({ id: charge.id, dueDate: editDate })}
+                                      onClick={() => {
+                                        const isFuture = new Date(editDate) > new Date();
+                                        const shouldReset = isFuture && charge.status === "sent";
+                                        updateDateMutation.mutate({ 
+                                          id: charge.id, 
+                                          dueDate: editDate, 
+                                          resetStatus: shouldReset 
+                                        });
+                                      }}
                                     >
                                       Salvar
                                     </Button>
