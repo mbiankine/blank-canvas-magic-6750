@@ -43,7 +43,7 @@ export function SettingsTab() {
       const newText = text.substring(0, start) + `*${selectedText}*` + text.substring(end);
       setForm((prev) => ({ ...prev, default_message: newText }));
     } else {
-      setForm((prev) => ({ ...prev, default_message: prev.default_message + "**" }));
+      setForm((prev) => ({ ...prev, default_message: prev.default_message + "* *" }));
     }
   };
 

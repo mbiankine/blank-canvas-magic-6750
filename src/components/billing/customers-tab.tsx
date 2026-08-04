@@ -56,7 +56,7 @@ export function CustomersTab() {
       const newText = text.substring(0, start) + `*${selectedText}*` + text.substring(end);
       setForm((prev) => ({ ...prev, custom_message: newText }));
     } else {
-      setForm((prev) => ({ ...prev, custom_message: prev.custom_message + "**" }));
+      setForm((prev) => ({ ...prev, custom_message: prev.custom_message + "* *" }));
     }
   };
 
