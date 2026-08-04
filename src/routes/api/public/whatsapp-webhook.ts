@@ -28,7 +28,12 @@ const inboundSchema = z.object({
   body: z.string().max(2000).optional(),
 });
 
-const PAID_COMMAND = /^[\s*_~]*(recebido|pago|paguei|quitado)[\s*_~!.]*$/i;
+const PAID_COMMANDS = [
+  /^[\s*_~]*(recebido|pago|paguei|quitado|fatura\s*paga|fatura\s*pago)[\s*_~!.]*$/i,
+];
+const PENDING_COMMANDS = [
+  /^[\s*_~]*(pendente|aberto|fatura\s*pendente)[\s*_~!.]*$/i,
+];
 
 const jsonHeaders = {
   "Content-Type": "application/json",
@@ -87,13 +92,18 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
           : "";
 
         if (inboundText && inboundPhoneRaw) {
-          if (!PAID_COMMAND.test(inboundText.trim())) {
+          const trimmedText = inboundText.trim();
+          const isPaidCommand = PAID_COMMANDS.some((regex) => regex.test(trimmedText));
+          const isPendingCommand = PENDING_COMMANDS.some((regex) => regex.test(trimmedText));
+
+          if (!isPaidCommand && !isPendingCommand) {
             return new Response(JSON.stringify({ ok: true, ignored: true }), {
               status: 200,
               headers: jsonHeaders,
             });
           }
 
+          const targetStatus = isPaidCommand ? "paid" : "pending";
           const digits = inboundPhoneRaw.split("@")[0].replace(/\D/g, "");
           const suffix = digits.slice(-8);
 
@@ -110,11 +120,12 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
             });
           }
 
+          // Busca a cobrança mais antiga que ainda não está no status desejado
           const { data: charge } = await supabaseAdmin
             .from("charges")
             .select("id")
             .in("customer_id", customerIds)
-            .neq("status", "paid")
+            .neq("status", targetStatus)
             .order("due_date", { ascending: true })
             .limit(1)
             .maybeSingle();
@@ -126,22 +137,25 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
             });
           }
 
-          const { error: paidError } = await supabaseAdmin
+          const { error: updateError } = await supabaseAdmin
             .from("charges")
-            .update({ status: "paid" })
+            .update({ status: targetStatus })
             .eq("id", charge.id);
 
-          if (paidError) {
-            return new Response(JSON.stringify({ error: paidError.message }), {
+          if (updateError) {
+            return new Response(JSON.stringify({ error: updateError.message }), {
               status: 500,
               headers: jsonHeaders,
             });
           }
 
-          return new Response(JSON.stringify({ ok: true, chargeId: charge.id, status: "paid" }), {
-            status: 200,
-            headers: jsonHeaders,
-          });
+          return new Response(
+            JSON.stringify({ ok: true, chargeId: charge.id, status: targetStatus }),
+            {
+              status: 200,
+              headers: jsonHeaders,
+            },
+          );
         }
 
         // Caminho 2: atualização de status de uma cobrança específica.

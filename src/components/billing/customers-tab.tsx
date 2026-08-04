@@ -43,6 +43,23 @@ export function CustomersTab() {
     }));
   };
 
+  const wrapBold = () => {
+    const textarea = document.getElementById("customer-message") as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = form.custom_message;
+
+    if (start !== end) {
+      const selectedText = text.substring(start, end);
+      const newText = text.substring(0, start) + `*${selectedText}*` + text.substring(end);
+      setForm((prev) => ({ ...prev, custom_message: newText }));
+    } else {
+      setForm((prev) => ({ ...prev, custom_message: prev.custom_message + "* *" }));
+    }
+  };
+
   const { data: companies } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
@@ -256,6 +273,15 @@ export function CustomersTab() {
                     {variable.label}
                   </Button>
                 ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-[10px] px-2 font-bold"
+                  onClick={wrapBold}
+                >
+                  Negrito (*)
+                </Button>
               </div>
               <Textarea
                 id="customer-message"
