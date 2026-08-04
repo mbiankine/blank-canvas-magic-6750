@@ -29,14 +29,6 @@ export function SettingsTab() {
       default_message: prev.default_message + variable,
     }));
   };
-  const queryClient = useQueryClient();
-  const [form, setForm] = useState({
-    api_url: "",
-    api_token: "",
-    instance: "",
-    send_time: "09:00",
-    default_message: "",
-  });
 
   const { data: settings } = useQuery({
     queryKey: ["whatsapp_settings"],
@@ -239,7 +231,7 @@ export function SettingsTab() {
                   key={variable.value}
                   type="button"
                   variant="outline"
-                  size="xs"
+                  size="sm"
                   className="h-7 text-[10px] px-2"
                   onClick={() => insertVariable(variable.value)}
                 >

@@ -42,8 +42,6 @@ export function CustomersTab() {
       custom_message: prev.custom_message + variable,
     }));
   };
-  const queryClient = useQueryClient();
-  const [form, setForm] = useState(emptyForm);
 
   const { data: companies } = useQuery({
     queryKey: ["companies"],
@@ -251,7 +249,7 @@ export function CustomersTab() {
                     key={variable.value}
                     type="button"
                     variant="outline"
-                    size="xs"
+                    size="sm"
                     className="h-7 text-[10px] px-2"
                     onClick={() => insertVariable(variable.value)}
                   >
