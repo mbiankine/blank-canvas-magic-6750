@@ -113,6 +113,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
 
             // Busca a cobrança pelo short_id e pelo número de telefone (segurança)
             const digits = inboundPhoneRaw.replace(/\D/g, "");
+            const suffix = digits.slice(-8);
             
             // Log para debug
             console.log(`Recebido comando de: ${digits}, shortId: ${shortId}, command: ${command}`);
@@ -129,10 +130,10 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               const customerWhatsapp = (customersData?.whatsapp || "").replace(/\D/g, "");
               
               // Verifica se o remetente é o cliente (compara os últimos 8 dígitos para ignorar o 9 extra ou DDI)
-              const isCustomer = customerWhatsapp.length >= 8 && digits.endsWith(customerWhatsapp.slice(-8));
+              const isCustomer = customerWhatsapp.length >= 8 && suffix.length >= 8 && digits.endsWith(customerWhatsapp.slice(-8));
 
               // Verifica se o remetente é o número mestre (62982503769) ou algum da empresa
-              let isAdmin = digits.endsWith("6282503769") || digits.endsWith("62982503769");
+              let isAdmin = suffix === "82503769" || suffix === "81645316";
               
               if (!isAdmin && !isCustomer) {
                 const { data: companies } = await supabaseAdmin
