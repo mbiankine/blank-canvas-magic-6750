@@ -51,7 +51,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: jsonHeaders }),
       POST: async ({ request }) => {
-        const expected = process.env["WORKER_TOKEN"];
+        const expected = process.env["WHATSAPP_WORKER_TOKEN"] || process.env["WORKER_TOKEN"];
         if (!expected) {
           return new Response(JSON.stringify({ error: "WORKER_TOKEN não configurado" }), {
             status: 500,
