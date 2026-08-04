@@ -137,10 +137,12 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               // Verifica se o remetente é o número mestre (62982503769 ou 6282503769)
               let isAdmin = 
                 suffix8 === "82503769" || 
+                suffix9 === "982503769" ||
                 suffix8 === "81645316" ||
-                suffix10 === "6282503769" || // Match exato para o número sem o 9
-                digits === "6282503769" ||
-                digits === "556282503769";
+                suffix9 === "981645316" ||
+                suffix10 === "6282503769" ||
+                digits.includes("62982503769") ||
+                digits.includes("6282503769");
               
               if (!isAdmin && !isCustomer) {
                 const { data: companies } = await supabaseAdmin
