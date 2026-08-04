@@ -242,8 +242,9 @@ export function SettingsTab() {
                 { label: "Cliente", value: "{cliente}" },
                 { label: "Valor", value: "{valor}" },
                 { label: "Vencimento", value: "{vencimento}" },
-                { label: "Serviço", value: "{servico}" },
-              ].map((variable) => (
+                  { label: "Serviço", value: "{servico}" },
+                  { label: "ID", value: "{id}" },
+                ].map((variable) => (
                 <Button
                   key={variable.value}
                   type="button"

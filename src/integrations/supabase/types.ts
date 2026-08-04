@@ -65,6 +65,7 @@ export type Database = {
           installment: number
           message: string
           sent_at: string | null
+          short_id: number
           status: string
           updated_at: string
           user_id: string
@@ -78,6 +79,7 @@ export type Database = {
           installment: number
           message: string
           sent_at?: string | null
+          short_id?: number
           status?: string
           updated_at?: string
           user_id: string
@@ -91,6 +93,7 @@ export type Database = {
           installment?: number
           message?: string
           sent_at?: string | null
+          short_id?: number
           status?: string
           updated_at?: string
           user_id?: string

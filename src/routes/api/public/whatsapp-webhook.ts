@@ -35,6 +35,10 @@ const PENDING_COMMANDS = [
   /^[\s*_~]*(pendente|aberto|fatura\s*pendente)[\s*_~!.]*$/i,
 ];
 
+// Regex para capturar comandos com ID, ex: "id 01 pago", "id 15 recebido", "*id 01 pago*"
+const ID_COMMAND_REGEX = /^[\s*_~]*id\s*(\d+)\s*(recebido|pago|paguei|quitado|fatura\s*paga|fatura\s*pago|pendente|aberto|fatura\s*pendente)[\s*_~!.]*$/i;
+
+
 const jsonHeaders = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
@@ -93,45 +97,68 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
 
         if (inboundText && inboundPhoneRaw) {
           const trimmedText = inboundText.trim();
-          const isPaidCommand = PAID_COMMANDS.some((regex) => regex.test(trimmedText));
-          const isPendingCommand = PENDING_COMMANDS.some((regex) => regex.test(trimmedText));
+          
+          // Tenta encontrar comando com ID primeiro
+          const idMatch = trimmedText.match(ID_COMMAND_REGEX);
+          let targetChargeId: string | null = null;
+          let targetStatus: "paid" | "pending" | null = null;
 
-          if (!isPaidCommand && !isPendingCommand) {
+          if (idMatch) {
+            const shortId = parseInt(idMatch[1], 10);
+            const command = idMatch[2].toLowerCase();
+            
+            targetStatus = ["pendente", "aberto", "fatura pendente"].includes(command) 
+              ? "pending" 
+              : "paid";
+
+            // Busca a cobrança pelo short_id e pelo número de telefone (segurança)
+            const digits = inboundPhoneRaw.split("@")[0].replace(/\D/g, "");
+            const suffix = digits.slice(-8);
+
+            const { data: charges } = await supabaseAdmin
+              .from("charges")
+              .select("id, customers!inner(whatsapp)")
+              .eq("short_id", shortId)
+              .like("customers.whatsapp", `%${suffix}`);
+
+            if (charges && charges.length > 0) {
+              targetChargeId = charges[0].id;
+            }
+          } else {
+            // Fallback: Lógica anterior (comando sem ID, busca a mais antiga)
+            const isPaidCommand = PAID_COMMANDS.some((regex) => regex.test(trimmedText));
+            const isPendingCommand = PENDING_COMMANDS.some((regex) => regex.test(trimmedText));
+
+            if (isPaidCommand || isPendingCommand) {
+              targetStatus = isPaidCommand ? "paid" : "pending";
+              const digits = inboundPhoneRaw.split("@")[0].replace(/\D/g, "");
+              const suffix = digits.slice(-8);
+
+              const { data: customers } = await supabaseAdmin
+                .from("customers")
+                .select("id, whatsapp")
+                .like("whatsapp", `%${suffix}`);
+
+              const customerIds = (customers ?? []).map((customer) => customer.id);
+              if (customerIds.length) {
+                const { data: charge } = await supabaseAdmin
+                  .from("charges")
+                  .select("id")
+                  .in("customer_id", customerIds)
+                  .neq("status", targetStatus)
+                  .order("due_date", { ascending: true })
+                  .limit(1)
+                  .maybeSingle();
+
+                if (charge) {
+                  targetChargeId = charge.id;
+                }
+              }
+            }
+          }
+
+          if (!targetChargeId || !targetStatus) {
             return new Response(JSON.stringify({ ok: true, ignored: true }), {
-              status: 200,
-              headers: jsonHeaders,
-            });
-          }
-
-          const targetStatus = isPaidCommand ? "paid" : "pending";
-          const digits = inboundPhoneRaw.split("@")[0].replace(/\D/g, "");
-          const suffix = digits.slice(-8);
-
-          const { data: customers } = await supabaseAdmin
-            .from("customers")
-            .select("id, whatsapp")
-            .like("whatsapp", `%${suffix}`);
-
-          const customerIds = (customers ?? []).map((customer) => customer.id);
-          if (!customerIds.length) {
-            return new Response(JSON.stringify({ ok: true, matched: false }), {
-              status: 200,
-              headers: jsonHeaders,
-            });
-          }
-
-          // Busca a cobrança mais antiga que ainda não está no status desejado
-          const { data: charge } = await supabaseAdmin
-            .from("charges")
-            .select("id")
-            .in("customer_id", customerIds)
-            .neq("status", targetStatus)
-            .order("due_date", { ascending: true })
-            .limit(1)
-            .maybeSingle();
-
-          if (!charge) {
-            return new Response(JSON.stringify({ ok: true, matched: false }), {
               status: 200,
               headers: jsonHeaders,
             });
@@ -140,7 +167,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
           const { error: updateError } = await supabaseAdmin
             .from("charges")
             .update({ status: targetStatus })
-            .eq("id", charge.id);
+            .eq("id", targetChargeId);
 
           if (updateError) {
             return new Response(JSON.stringify({ error: updateError.message }), {
@@ -150,7 +177,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
           }
 
           return new Response(
-            JSON.stringify({ ok: true, chargeId: charge.id, status: targetStatus }),
+            JSON.stringify({ ok: true, chargeId: targetChargeId, status: targetStatus }),
             {
               status: 200,
               headers: jsonHeaders,

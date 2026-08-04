@@ -216,7 +216,9 @@ export function ChargesTab() {
                               </Badge>
                               <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-medium text-sm">Parcela {charge.installment}</span>
+                                  <span className="font-medium text-sm">
+                                    Parcela {charge.installment} (ID {String(charge.short_id || "").padStart(2, "0")})
+                                  </span>
                                   <span className="text-sm font-semibold">R$ {Number(charge.amount).toFixed(2)}</span>
                                 </div>
                                 
