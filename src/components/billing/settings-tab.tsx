@@ -30,6 +30,23 @@ export function SettingsTab() {
     }));
   };
 
+  const wrapBold = () => {
+    const textarea = document.getElementById("default-message") as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = form.default_message;
+
+    if (start !== end) {
+      const selectedText = text.substring(start, end);
+      const newText = text.substring(0, start) + `*${selectedText}*` + text.substring(end);
+      setForm((prev) => ({ ...prev, default_message: newText }));
+    } else {
+      setForm((prev) => ({ ...prev, default_message: prev.default_message + "**" }));
+    }
+  };
+
   const { data: settings } = useQuery({
     queryKey: ["whatsapp_settings"],
     queryFn: async () => {
@@ -238,6 +255,15 @@ export function SettingsTab() {
                   {variable.label}
                 </Button>
               ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] px-2 font-bold"
+                onClick={wrapBold}
+              >
+                Negrito (*)
+              </Button>
             </div>
             <Textarea
               id="default-message"
