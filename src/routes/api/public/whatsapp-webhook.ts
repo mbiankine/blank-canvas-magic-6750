@@ -112,9 +112,9 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               : "paid";
 
             // Busca a cobrança pelo short_id e pelo número de telefone (segurança)
-            const digits = inboundPhoneRaw.split("@")[0].replace(/\D/g, "");
+            const digits = inboundPhoneRaw.replace(/\D/g, "");
             
-            // Log para debug (você pode ver nos logs do sistema se necessário)
+            // Log para debug
             console.log(`Recebido comando de: ${digits}, shortId: ${shortId}, command: ${command}`);
 
             // Busca a cobrança pelo short_id
@@ -129,7 +129,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               const customerWhatsapp = (customersData?.whatsapp || "").replace(/\D/g, "");
               
               // Verifica se o remetente é o cliente
-              const isCustomer = customerWhatsapp.endsWith(digits.slice(-8));
+              const isCustomer = customerWhatsapp.length >= 8 && digits.endsWith(customerWhatsapp.slice(-8));
 
               // Verifica se o remetente é o número mestre (62982503769) ou algum da empresa
               let isAdmin = digits.endsWith("62982503769") || digits.endsWith("5562982503769");
@@ -143,7 +143,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
                 if (companies) {
                   isAdmin = companies.some(c => {
                     const companyPhone = (c.phone || "").replace(/\D/g, "");
-                    return companyPhone.endsWith(digits.slice(-8));
+                    return companyPhone.length >= 8 && digits.endsWith(companyPhone.slice(-8));
                   });
                 }
               }
@@ -161,13 +161,12 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
 
             if (isPaidCommand || isPendingCommand) {
               targetStatus = isPaidCommand ? "paid" : "pending";
-              const digits = inboundPhoneRaw.split("@")[0].replace(/\D/g, "");
-              const suffix = digits.slice(-8);
+              const digits = inboundPhoneRaw.replace(/\D/g, "");
 
               const { data: customers } = await supabaseAdmin
                 .from("customers")
                 .select("id, whatsapp")
-                .like("whatsapp", `%${suffix}`);
+                .like("whatsapp", `%${digits.slice(-8)}`);
 
               const customerIds = (customers ?? []).map((customer) => customer.id);
               if (customerIds.length) {
