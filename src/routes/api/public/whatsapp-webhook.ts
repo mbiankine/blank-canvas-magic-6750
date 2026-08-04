@@ -128,11 +128,11 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               const customersData = charge.customers as unknown as { whatsapp: string } | null;
               const customerWhatsapp = (customersData?.whatsapp || "").replace(/\D/g, "");
               
-              // Verifica se o remetente é o cliente
+              // Verifica se o remetente é o cliente (compara os últimos 8 dígitos para ignorar o 9 extra ou DDI)
               const isCustomer = customerWhatsapp.length >= 8 && digits.endsWith(customerWhatsapp.slice(-8));
 
               // Verifica se o remetente é o número mestre (62982503769) ou algum da empresa
-              let isAdmin = digits.endsWith("62982503769") || digits.endsWith("5562982503769");
+              let isAdmin = digits.endsWith("6282503769") || digits.endsWith("62982503769");
               
               if (!isAdmin && !isCustomer) {
                 const { data: companies } = await supabaseAdmin
