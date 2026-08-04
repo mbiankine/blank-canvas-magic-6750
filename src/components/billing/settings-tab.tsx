@@ -23,6 +23,13 @@ export function SettingsTab() {
     default_message: "",
   });
 
+  const insertVariable = (variable: string) => {
+    setForm((prev) => ({
+      ...prev,
+      default_message: prev.default_message + variable,
+    }));
+  };
+
   const { data: settings } = useQuery({
     queryKey: ["whatsapp_settings"],
     queryFn: async () => {
@@ -213,6 +220,25 @@ export function SettingsTab() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="default-message">Mensagem Padrão (Sugestão)</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {[
+                { label: "Cliente", value: "{cliente}" },
+                { label: "Valor", value: "{valor}" },
+                { label: "Vencimento", value: "{vencimento}" },
+                { label: "Serviço", value: "{servico}" },
+              ].map((variable) => (
+                <Button
+                  key={variable.value}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-[10px] px-2"
+                  onClick={() => insertVariable(variable.value)}
+                >
+                  {variable.label}
+                </Button>
+              ))}
+            </div>
             <Textarea
               id="default-message"
               rows={4}
@@ -221,7 +247,7 @@ export function SettingsTab() {
               onChange={(e) => setForm({ ...form, default_message: e.target.value })}
             />
             <p className="text-xs text-muted-foreground">
-              Esta mensagem será usada como sugestão no cadastro de novos clientes.
+              Clique nos botões acima para inserir variáveis na mensagem padrão.
             </p>
           </div>
           <Button type="submit" disabled={save.isPending}>

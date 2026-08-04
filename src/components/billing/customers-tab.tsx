@@ -36,6 +36,13 @@ export function CustomersTab() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyForm);
 
+  const insertVariable = (variable: string) => {
+    setForm((prev) => ({
+      ...prev,
+      custom_message: prev.custom_message + variable,
+    }));
+  };
+
   const { data: companies } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
@@ -231,6 +238,25 @@ export function CustomersTab() {
 
             <div className="space-y-2">
               <Label htmlFor="customer-message">Mensagem personalizada</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {[
+                  { label: "Cliente", value: "{cliente}" },
+                  { label: "Valor", value: "{valor}" },
+                  { label: "Vencimento", value: "{vencimento}" },
+                  { label: "Serviço", value: "{servico}" },
+                ].map((variable) => (
+                  <Button
+                    key={variable.value}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-[10px] px-2"
+                    onClick={() => insertVariable(variable.value)}
+                  >
+                    {variable.label}
+                  </Button>
+                ))}
+              </div>
               <Textarea
                 id="customer-message"
                 rows={4}
@@ -240,7 +266,7 @@ export function CustomersTab() {
                 onChange={(e) => setForm({ ...form, custom_message: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                Use {"{cliente}"}, {"{valor}"}, {"{vencimento}"} e {"{servico}"}.
+                Clique nos botões acima para inserir variáveis.
               </p>
             </div>
 
