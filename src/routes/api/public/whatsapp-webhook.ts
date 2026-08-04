@@ -115,14 +115,35 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
             const digits = inboundPhoneRaw.split("@")[0].replace(/\D/g, "");
             const suffix = digits.slice(-8);
 
+            // Busca a cobrança pelo short_id
             const { data: charges } = await supabaseAdmin
               .from("charges")
-              .select("id, customers!inner(whatsapp)")
-              .eq("short_id", shortId)
-              .like("customers.whatsapp", `%${suffix}`);
+              .select("id, customers!inner(whatsapp), user_id")
+              .eq("short_id", shortId);
 
             if (charges && charges.length > 0) {
-              targetChargeId = charges[0].id;
+              const charge = charges[0];
+              const customerWhatsapp = charge.customers.whatsapp.replace(/\D/g, "");
+              const isCustomer = customerWhatsapp.endsWith(suffix);
+
+              // Se não for o cliente, verifica se é a empresa (o admin/dono do sistema)
+              let isAdmin = false;
+              if (!isCustomer) {
+                const { data: settings } = await supabaseAdmin
+                  .from("whatsapp_settings")
+                  .select("whatsapp_number")
+                  .eq("user_id", charge.user_id)
+                  .single();
+
+                if (settings?.whatsapp_number) {
+                  const adminWhatsapp = settings.whatsapp_number.replace(/\D/g, "");
+                  isAdmin = adminWhatsapp.endsWith(suffix);
+                }
+              }
+
+              if (isCustomer || isAdmin) {
+                targetChargeId = charge.id;
+              }
             }
           } else {
             // Fallback: Lógica anterior (comando sem ID, busca a mais antiga)
