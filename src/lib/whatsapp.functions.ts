@@ -67,7 +67,12 @@ export const sendCharge = createServerFn({ method: "POST" })
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(settings.api_token ? { Authorization: `Bearer ${settings.api_token}` } : {}),
+          ...(settings.api_token
+            ? {
+                Authorization: settings.api_token.startsWith("Bearer ") ? settings.api_token : `Bearer ${settings.api_token}`,
+                "x-worker-token": settings.api_token.replace(/^Bearer\s+/i, ""),
+              }
+            : {}),
         },
         body: JSON.stringify({
           instance: settings.instance ?? undefined,
