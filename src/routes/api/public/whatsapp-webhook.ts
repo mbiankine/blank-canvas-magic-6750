@@ -129,7 +129,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               const customerWhatsapp = (customersData?.whatsapp || "").replace(/\D/g, "");
               
               // Verifica se o remetente é o cliente
-              const isCustomer = customerWhatsapp.endsWith(digits.slice(-8));
+              const isCustomer = customerWhatsapp.length >= 8 && digits.endsWith(customerWhatsapp.slice(-8));
 
               // Verifica se o remetente é o número mestre (62982503769) ou algum da empresa
               let isAdmin = digits.endsWith("62982503769") || digits.endsWith("5562982503769");
@@ -143,7 +143,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
                 if (companies) {
                   isAdmin = companies.some(c => {
                     const companyPhone = (c.phone || "").replace(/\D/g, "");
-                    return companyPhone.endsWith(digits.slice(-8));
+                    return companyPhone.length >= 8 && digits.endsWith(companyPhone.slice(-8));
                   });
                 }
               }
