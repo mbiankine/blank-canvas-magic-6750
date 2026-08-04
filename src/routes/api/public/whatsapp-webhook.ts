@@ -118,7 +118,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
             // Busca a cobrança pelo short_id
             const { data: charges } = await supabaseAdmin
               .from("charges")
-              .select("id, customers!inner(whatsapp), user_id")
+              .select("id, customers:customers!inner(whatsapp), user_id")
               .eq("short_id", shortId);
 
             if (charges && charges.length > 0) {
