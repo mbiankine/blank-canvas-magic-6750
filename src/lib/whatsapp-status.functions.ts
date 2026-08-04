@@ -80,6 +80,7 @@ export const getWorkerStatus = createServerFn({ method: "GET" })
       try {
         const res = await fetch(`${base}/qr`, { headers });
         const contentType = res.headers.get("content-type") ?? "";
+        
         if (res.ok && contentType.startsWith("image/")) {
           const buffer = await res.arrayBuffer();
           const b64 = Buffer.from(buffer).toString("base64");
@@ -95,14 +96,17 @@ export const getWorkerStatus = createServerFn({ method: "GET" })
               info.qrImage = qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`;
             }
           } else if (text.includes("<img")) {
-            const match = text.match(/src="(data:image[^"]+)"/);
+            const match = text.match(/src=["'](data:image[^"']+)["']/);
             if (match) info.qrImage = match[1];
+          } else if (text && text.length > 50) {
+             // Se o texto for longo e não for JSON, pode ser o QR puro em base64
+             info.qrImage = text.startsWith("data:") ? text : `data:image/png;base64,${text}`;
           } else if (text) {
             info.qrText = text.slice(0, 4000);
           }
         }
-      } catch {
-        // QR indisponível: mantém apenas o status.
+      } catch (e) {
+        console.error("Erro ao buscar QR do worker:", e);
       }
     }
 
