@@ -129,14 +129,14 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               // Se não for o cliente, verifica se é a empresa (o admin/dono do sistema)
               let isAdmin = false;
               if (!isCustomer) {
-                const { data: settings } = await supabaseAdmin
-                  .from("whatsapp_settings")
-                  .select("whatsapp_number")
+                const { data: companies } = await supabaseAdmin
+                  .from("companies")
+                  .select("phone")
                   .eq("user_id", charge.user_id)
-                  .single();
+                  .limit(1);
 
-                if (settings?.whatsapp_number) {
-                  const adminWhatsapp = settings.whatsapp_number.replace(/\D/g, "");
+                if (companies && companies.length > 0) {
+                  const adminWhatsapp = companies[0].phone.replace(/\D/g, "");
                   isAdmin = adminWhatsapp.endsWith(suffix);
                 }
               }
