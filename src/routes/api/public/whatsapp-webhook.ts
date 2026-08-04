@@ -113,10 +113,11 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
 
             // Busca a cobrança pelo short_id e pelo número de telefone (segurança)
             const digits = inboundPhoneRaw.replace(/\D/g, "");
-            const suffix = digits.slice(-8);
+            const suffix8 = digits.slice(-8);
+            const suffix10 = digits.slice(-10); // Captura DDD + Número sem o 9 (ex: 6282503769)
             
             // Log para debug
-            console.log(`Recebido comando de: ${digits}, shortId: ${shortId}, command: ${command}`);
+            console.log(`Recebido comando de: ${digits}, suffix8: ${suffix8}, suffix10: ${suffix10}, shortId: ${shortId}, command: ${command}`);
 
             // Busca a cobrança pelo short_id
             const { data: charges } = await supabaseAdmin
@@ -130,10 +131,15 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               const customerWhatsapp = (customersData?.whatsapp || "").replace(/\D/g, "");
               
               // Verifica se o remetente é o cliente (compara os últimos 8 dígitos para ignorar o 9 extra ou DDI)
-              const isCustomer = customerWhatsapp.length >= 8 && suffix.length >= 8 && digits.endsWith(customerWhatsapp.slice(-8));
+              const isCustomer = customerWhatsapp.length >= 8 && digits.endsWith(customerWhatsapp.slice(-8));
 
-              // Verifica se o remetente é o número mestre (62982503769) ou algum da empresa
-              let isAdmin = suffix === "82503769" || suffix === "81645316";
+              // Verifica se o remetente é o número mestre (62982503769 ou 6282503769)
+              let isAdmin = 
+                suffix8 === "82503769" || 
+                suffix8 === "81645316" ||
+                suffix10 === "6282503769" || // Match exato para o número sem o 9
+                digits === "6282503769" ||
+                digits === "556282503769";
               
               if (!isAdmin && !isCustomer) {
                 const { data: companies } = await supabaseAdmin
