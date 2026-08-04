@@ -123,7 +123,8 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
 
             if (charges && charges.length > 0) {
               const charge = charges[0];
-              const customerWhatsapp = (charge.customers?.whatsapp || "").replace(/\D/g, "");
+              const customersData = charge.customers as unknown as { whatsapp: string } | null;
+              const customerWhatsapp = (customersData?.whatsapp || "").replace(/\D/g, "");
               const isCustomer = customerWhatsapp.endsWith(suffix);
 
               // Se não for o cliente, verifica se é a empresa (o admin/dono do sistema)
@@ -136,7 +137,7 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
                   .limit(1);
 
                 if (companies && companies.length > 0) {
-                  const adminWhatsapp = companies[0].phone.replace(/\D/g, "");
+                  const adminWhatsapp = (companies[0].phone || "").replace(/\D/g, "");
                   isAdmin = adminWhatsapp.endsWith(suffix);
                 }
               }
