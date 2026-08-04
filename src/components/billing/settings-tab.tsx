@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getWorkerStatus } from "@/lib/whatsapp-status.functions";
@@ -19,6 +20,7 @@ export function SettingsTab() {
     api_token: "",
     instance: "",
     send_time: "09:00",
+    default_message: "",
   });
 
   const { data: settings } = useQuery({
@@ -40,6 +42,7 @@ export function SettingsTab() {
         api_token: settings.api_token ?? "",
         instance: settings.instance ?? "",
         send_time: (settings.send_time ?? "09:00").slice(0, 5),
+        default_message: settings.default_message ?? "",
       });
     }
   }, [settings]);
@@ -55,6 +58,7 @@ export function SettingsTab() {
           api_token: form.api_token.trim() || null,
           instance: form.instance.trim() || null,
           send_time: form.send_time || "09:00",
+          default_message: form.default_message.trim() || null,
         },
         { onConflict: "user_id" },
       );
@@ -205,6 +209,19 @@ export function SettingsTab() {
             />
             <p className="text-xs text-muted-foreground">
               Hora do dia usada para os envios das cobranças.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="default-message">Mensagem Padrão (Sugestão)</Label>
+            <Textarea
+              id="default-message"
+              rows={4}
+              placeholder="Olá {cliente}, sua cobrança de {valor} referente ao serviço {servico} vence em {vencimento}..."
+              value={form.default_message}
+              onChange={(e) => setForm({ ...form, default_message: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground">
+              Esta mensagem será usada como sugestão no cadastro de novos clientes.
             </p>
           </div>
           <Button type="submit" disabled={save.isPending}>
