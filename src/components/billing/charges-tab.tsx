@@ -281,14 +281,14 @@ export function ChargesTab() {
                             </div>
 
                             <div className="flex items-center gap-2">
-                              {charge.status === "pending" && (
+                              {(charge.status === "pending" || charge.status === "sent") && (
                                 <Button 
                                   size="sm" 
                                   className="h-8"
                                   onClick={() => sendMutation.mutate(charge.id)}
                                   disabled={sendMutation.isPending}
                                 >
-                                  Enviar WhatsApp
+                                  {charge.status === "sent" ? "Reenviar WhatsApp" : "Enviar WhatsApp"}
                                 </Button>
                               )}
                               {charge.status !== "paid" && (
