@@ -156,25 +156,40 @@ export function SettingsTab() {
                 WhatsApp pareado — as cobranças podem ser enviadas.
               </p>
             ) : workerData.qrImage ? (
-              <div className="space-y-2">
-                <img
-                  src={workerData.qrImage}
-                  alt="QR code para parear o WhatsApp"
-                  className="mx-auto h-64 w-64 rounded-lg border border-border bg-card p-2"
-                />
-                <p className="text-center text-xs text-muted-foreground">
-                  WhatsApp → Aparelhos conectados → Conectar aparelho.
-                </p>
+              <div className="space-y-4">
+                <div className="relative mx-auto h-72 w-72 overflow-hidden rounded-xl border-4 border-primary/20 bg-white p-4 shadow-xl">
+                  <img
+                    src={workerData.qrImage}
+                    alt="QR code para parear o WhatsApp"
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <div className="rounded-lg bg-muted/50 p-4 text-center">
+                  <p className="text-sm font-medium text-foreground">
+                    Como conectar:
+                  </p>
+                  <ol className="mt-2 text-xs text-muted-foreground space-y-1">
+                    <li>1. Abra o WhatsApp no seu celular</li>
+                    <li>2. Toque em <strong>Configurações</strong> ou <strong>Menu</strong></li>
+                    <li>3. Selecione <strong>Aparelhos conectados</strong></li>
+                    <li>4. Toque em <strong>Conectar um aparelho</strong> e aponte para o código acima</li>
+                  </ol>
+                </div>
               </div>
             ) : workerData.qrText ? (
               <pre className="overflow-auto rounded-lg border border-border bg-muted p-3 text-[8px] leading-[8px]">
                 {workerData.qrText}
               </pre>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Nenhum QR disponível no momento (rota /qr do worker). Reinicie o serviço se o
-                pareamento estiver pendente.
-              </p>
+              <div className="py-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Nenhum QR disponível no momento.
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground/60">
+                  O worker está online, mas aguardando inicialização da sessão. 
+                  Clique em "Atualizar" em instantes.
+                </p>
+              </div>
             )}
           </>
         )}
