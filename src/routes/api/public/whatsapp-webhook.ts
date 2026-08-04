@@ -116,9 +116,10 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
             const suffix8 = digits.slice(-8);
             const suffix9 = digits.slice(-9); // Ex: 982503769
             const suffix10 = digits.slice(-10); // Captura DDD + Número sem o 9 (ex: 6282503769)
+            const suffix11 = digits.slice(-11); // Captura DDD + Número com o 9 (ex: 62982503769)
             
             // Log para debug
-            console.log(`Recebido comando de: ${digits}, suffix8: ${suffix8}, suffix9: ${suffix9}, suffix10: ${suffix10}, shortId: ${shortId}, command: ${command}`);
+            console.log(`Recebido comando de: ${digits}, s8: ${suffix8}, s9: ${suffix9}, s10: ${suffix10}, s11: ${suffix11}, shortId: ${shortId}, command: ${command}`);
 
             // Busca a cobrança pelo short_id
             const { data: charges } = await supabaseAdmin
