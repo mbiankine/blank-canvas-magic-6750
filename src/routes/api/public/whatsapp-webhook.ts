@@ -139,11 +139,12 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               let isAdmin = 
                 suffix8 === "82503769" || 
                 suffix9 === "982503769" ||
+                suffix10 === "6282503769" ||
+                suffix11 === "62982503769" ||
                 suffix8 === "81645316" ||
                 suffix9 === "981645316" ||
-                suffix10 === "6282503769" ||
-                digits.includes("62982503769") ||
-                digits.includes("6282503769");
+                digits.includes("82503769") ||
+                digits.includes("81645316");
               
               if (!isAdmin && !isCustomer) {
                 const { data: companies } = await supabaseAdmin
