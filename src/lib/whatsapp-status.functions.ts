@@ -45,8 +45,8 @@ export const getWorkerStatus = createServerFn({ method: "GET" })
     const base = baseFrom(settings.api_url);
     const headers: Record<string, string> = settings.api_token
       ? {
-          Authorization: `Bearer ${settings.api_token}`,
-          "x-worker-token": settings.api_token,
+          Authorization: settings.api_token.startsWith("Bearer ") ? settings.api_token : `Bearer ${settings.api_token}`,
+          "x-worker-token": settings.api_token.replace(/^Bearer\s+/i, ""),
         }
       : {};
 
