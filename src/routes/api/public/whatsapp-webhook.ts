@@ -36,7 +36,7 @@ const PENDING_COMMANDS = [
 ];
 
 // Regex para capturar comandos com ID, ex: "id 01 pago", "id 15 recebido", "*id 01 pago*"
-const ID_COMMAND_REGEX = /^[\s*_~]*id\s*(\d+)\s*(recebido|pago|paguei|quitado|fatura\s*paga|fatura\s*pago|pendente|aberto|fatura\s*pendente)[\s*_~!.]*$/i;
+const ID_COMMAND_REGEX = /id\s*(\d+)\s*(recebido|pago|paguei|quitado|fatura\s*paga|fatura\s*pago|pendente|aberto|fatura\s*pendente)/i;
 
 
 const jsonHeaders = {
@@ -116,9 +116,10 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
             const suffix8 = digits.slice(-8);
             const suffix9 = digits.slice(-9); // Ex: 982503769
             const suffix10 = digits.slice(-10); // Captura DDD + Número sem o 9 (ex: 6282503769)
+            const suffix11 = digits.slice(-11); // Captura DDD + Número com o 9 (ex: 62982503769)
             
             // Log para debug
-            console.log(`Recebido comando de: ${digits}, suffix8: ${suffix8}, suffix9: ${suffix9}, suffix10: ${suffix10}, shortId: ${shortId}, command: ${command}`);
+            console.log(`Recebido comando de: ${digits}, s8: ${suffix8}, s9: ${suffix9}, s10: ${suffix10}, s11: ${suffix11}, shortId: ${shortId}, command: ${command}`);
 
             // Busca a cobrança pelo short_id
             const { data: charges } = await supabaseAdmin
@@ -138,11 +139,12 @@ export const Route = createFileRoute("/api/public/whatsapp-webhook")({
               let isAdmin = 
                 suffix8 === "82503769" || 
                 suffix9 === "982503769" ||
+                suffix10 === "6282503769" ||
+                suffix11 === "62982503769" ||
                 suffix8 === "81645316" ||
                 suffix9 === "981645316" ||
-                suffix10 === "6282503769" ||
-                digits.includes("62982503769") ||
-                digits.includes("6282503769");
+                digits.includes("82503769") ||
+                digits.includes("81645316");
               
               if (!isAdmin && !isCustomer) {
                 const { data: companies } = await supabaseAdmin
