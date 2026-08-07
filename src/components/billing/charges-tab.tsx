@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronRight, Calendar, User, Building2, Pencil } from "lucide-react";
+import { ChevronRight, Calendar, User, Building2, Pencil, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -148,16 +148,31 @@ export function ChargesTab() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold tracking-tight">Cobranças</h2>
-        <Button
-          size="sm"
-          variant="destructive"
-          disabled={deleteAllMutation.isPending}
-          onClick={() => {
-            if (confirm("Remover todas as cobranças de todos os clientes?")) deleteAllMutation.mutate();
-          }}
-        >
-          Limpar tudo
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2"
+            onClick={() => {
+              invalidate();
+              toast.success("Lista de cobranças atualizada.");
+            }}
+            disabled={isLoading}
+          >
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            Atualizar
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            disabled={deleteAllMutation.isPending}
+            onClick={() => {
+              if (confirm("Remover todas as cobranças de todos os clientes?")) deleteAllMutation.mutate();
+            }}
+          >
+            Limpar tudo
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4">
