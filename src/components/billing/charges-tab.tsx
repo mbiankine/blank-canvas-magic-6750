@@ -226,7 +226,15 @@ export function ChargesTab() {
                         <div key={charge.id} className="p-4 hover:bg-accent/20 transition-colors">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="flex items-start gap-3">
-                              <Badge variant={charge.status === "paid" ? "default" : charge.status === "sent" ? "outline" : "secondary"}>
+                              <Badge 
+                                className={cn(
+                                  charge.status === "paid" && "bg-green-100 text-green-800 hover:bg-green-100 border-green-200",
+                                  charge.status === "pending" && "bg-orange-100 text-orange-800 hover:bg-orange-100 border-orange-200",
+                                  charge.status === "sent" && "bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200",
+                                  charge.status === "canceled" && "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200"
+                                )}
+                                variant="outline"
+                              >
                                 {STATUS_LABEL[charge.status] || charge.status}
                               </Badge>
                               <div className="space-y-1">
